@@ -1,1 +1,14 @@
-
+"icons": [{
+    "src": "https://cdn.jsdelivr.net/gh/bukitbesi/alchemist-theme/icons/icon-192x192.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }, {
+    "src": "https://cdn.jsdelivr.net/gh/bukitbesi/alchemist-theme/icons/icon-512x512.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }, {
+    "src": "https://cdn.jsdelivr.net/gh/bukitbesi/alchemist-theme/icons/logo.svg",
+    "sizes": "any",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
