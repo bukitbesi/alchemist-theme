@@ -1,205 +1,154 @@
-/**
- * Blogger Recent Posts Widget
- * Vanilla JavaScript implementation for GitHub hosting
- * Preserves all original Blogger widget functionality
- */
+    /**
+     * @name   Enhanced Recent Posts Widget for Blogger
+     * @version 2.1.0 (Vanilla JS Version)
+     * @author Ismail (Inspired by Info Arlina)
+     * @description A modern, SEO-optimized, and performance-focused recent posts widget using vanilla JavaScript.
+     * Features: JSON-LD Schema for SEO, lazy loading, semantic HTML, and easy configuration.
+     * No jQuery or AI features.
+     */
+    document.addEventListener('DOMContentLoaded', () => {
 
-// Configuration object for better organization
-const RecentPostsConfig = {
-    numPosts: 5,
-    showThumbnails: true,
-    displayMore: false,
-    displaySeparator: false,
-    showCommentNum: false,
-    showPostDate: false,
-    showPostSummary: false,
-    numChars: 62,
-    defaultThumbnail: 'https://2.bp.blogspot.com/-Q6S8qhkE33I/V0VwhvhULoI/AAAAAAAAHfQ/VZkkOgl_wX4X59EP31Jpl1swFsj6-n0TQCLcB/s1600/InfoArlina.png'
-};
+        // --- Configuration Object ---
+        const config = {
+            blogURL: 'https://bukitbesi.blogspot.com', // **IMPORTANT: Change to your blog's URL**
+            containerId: 'recent-posts-target',
+            schemaContainerId: 'posts-schema',
+            numPosts: 5,
+            showThumbnails: true,
+            thumbnailSize: 200,
+            showSummary: true,
+            summaryLength: 100,
+            showDate: true,
+            showComments: true,
+            showReadMore: true,
+            readMoreText: 'Read More',
+            noThumbnailImage: 'https://placehold.co/200x200/EFEFEF/AAAAAA?text=No+Image',
+            monthNames: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        };
 
-/**
- * Main function to render recent posts from Blogger feed
- * This function is called by the Blogger feed API callback
- * @param {Object} json - The JSON feed data from Blogger
- */
-function renderRecentPosts(json) {
-    // Create container
-    let html = '<ul class="recent_posts_arlina">';
-    
-    const feed = json.feed;
-    const entries = feed.entry || [];
-    const postsToShow = Math.min(RecentPostsConfig.numPosts, entries.length);
-    
-    // Month names for date formatting
-    const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    // Process each post
-    for (let i = 0; i < postsToShow; i++) {
-        const entry = entries[i];
-        const title = entry.title.$t;
-        let postUrl = '';
-        let commentUrl = '';
-        let commentCount = '0 Comments';
-        
-        // Extract URLs and comment info from links
-        if (entry.link) {
-            for (let j = 0; j < entry.link.length; j++) {
-                const link = entry.link[j];
+        const container = document.getElementById(config.containerId);
+        if (!container) {
+            console.error(`Error: Container with ID '${config.containerId}' not found.`);
+            return;
+        }
+
+        // --- Main Function to Fetch and Render Posts ---
+        async function fetchRecentPosts() {
+            const feedURL = `${config.blogURL.replace(/\/+$/, '')}/feeds/posts/default?alt=json-in-script&max-results=${config.numPosts}&callback=renderPosts`;
+            const script = document.createElement('script');
+            script.src = feedURL;
+            script.onerror = handleInstallError;
+            document.body.appendChild(script);
+        }
+
+        // --- Global Callback Function ---
+        window.renderPosts = (json) => {
+            try {
+                if (!json || !json.feed || !json.feed.entry || json.feed.entry.length === 0) {
+                    displayError("No posts found or the feed is empty.");
+                    return;
+                }
+                const posts = json.feed.entry;
+                const postList = document.createElement('ul');
+                postList.className = 'post-list';
                 
-                if (link.rel === 'alternate') {
-                    postUrl = link.href;
-                }
+                const schemaData = { "@context": "https://schema.org", "@graph": [] };
+
+                posts.forEach(post => {
+                    const postElement = createPostElement(post);
+                    postList.appendChild(postElement);
+                    const postSchema = createPostSchema(post);
+                    if (postSchema) schemaData["@graph"].push(postSchema);
+                });
+
+                container.innerHTML = '';
+                container.appendChild(postList);
                 
-                if (link.rel === 'replies' && link.type === 'text/html') {
-                    commentCount = link.title;
-                    commentUrl = link.href;
+                const schemaContainer = document.getElementById(config.schemaContainerId);
+                if (schemaContainer) {
+                    schemaContainer.textContent = JSON.stringify(schemaData, null, 2);
                 }
+            } catch (error) {
+                console.error("Error rendering posts:", error);
+                displayError("An unexpected error occurred while displaying posts.");
             }
-        }
-        
-        // Extract thumbnail
-        let thumbnailUrl = RecentPostsConfig.defaultThumbnail;
-        
-        try {
-            // Try to get thumbnail from media
-            if (entry.media$thumbnail) {
-                thumbnailUrl = entry.media$thumbnail.url;
-            }
-        } catch (error) {
-            // Fallback: Extract image from content
-            const content = entry.content ? entry.content.$t : '';
-            const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/);
-            
-            if (imgMatch && imgMatch[1]) {
-                thumbnailUrl = imgMatch[1];
-            }
-        }
-        
-        // Format publish date
-        const publishedDate = entry.published.$t;
-        const year = publishedDate.substring(0, 4);
-        const month = publishedDate.substring(5, 7);
-        const day = publishedDate.substring(8, 10);
-        
-        // Start building post HTML
-        html += '<li class="clearfix">';
-        
-        // Add thumbnail if enabled
-        if (RecentPostsConfig.showThumbnails) {
-            html += `<span class="wrapinfo">
-                        <img class="recent_thumb" src="${thumbnailUrl}" alt="${title}"/>
-                     </span>`;
-        }
-        
-        // Add post title with link
-        html += `<b><a href="${postUrl}" target="_top">${title}</a></b><br>`;
-        
-        // Add post summary if enabled
-        if (RecentPostsConfig.showPostSummary) {
-            let summary = '';
-            
-            if (entry.content) {
-                summary = entry.content.$t;
-            } else if (entry.summary) {
-                summary = entry.summary.$t;
-            }
-            
-            // Remove HTML tags
-            summary = summary.replace(/<[^>]*>/g, '');
-            
-            // Truncate if needed
-            if (summary.length > RecentPostsConfig.numChars) {
-                summary = summary.substring(0, RecentPostsConfig.numChars);
-                const lastSpace = summary.lastIndexOf(' ');
-                if (lastSpace > 0) {
-                    summary = summary.substring(0, lastSpace);
-                }
-                summary += '...';
-            }
-            
-            if (summary) {
-                html += `<i>${summary}</i>`;
-            }
-        }
-        
-        // Build metadata line
-        let metadata = '';
-        let hasMetadata = false;
-        
-        html += '<br>';
-        
-        // Add post date if enabled
-        if (RecentPostsConfig.showPostDate) {
-            metadata += `${monthNames[parseInt(month, 10)]}-${day} - ${year}`;
-            hasMetadata = true;
-        }
-        
-        // Add comment count if enabled
-        if (RecentPostsConfig.showCommentNum) {
-            if (hasMetadata) metadata += ' | ';
-            
-            // Format comment text
-            if (commentCount === '1 Comments') {
-                commentCount = '1 Comment';
-            } else if (commentCount === '0 Comments') {
-                commentCount = 'No Comments';
-            }
-            
-            metadata += `<a href="${commentUrl}" target="_top">${commentCount}</a>`;
-            hasMetadata = true;
-        }
-        
-        // Add "More" link if enabled
-        if (RecentPostsConfig.displayMore) {
-            if (hasMetadata) metadata += ' | ';
-            metadata += `<a href="${postUrl}" class="url" target="_top">More -></a>`;
-            hasMetadata = true;
-        }
-        
-        html += metadata;
-        html += '</li>';
-        
-        // Add separator if enabled and not last post
-        if (RecentPostsConfig.displaySeparator && i < postsToShow - 1) {
-            html += '<hr size="0.5">';
-        }
-    }
-    
-    html += '</ul>';
-    
-    // Write the HTML to the document
-    document.write(html);
-}
+            // Clean up the script tag
+            document.querySelectorAll(`script[src*="/feeds/posts/default"]`).forEach(s => s.remove());
+        };
 
-/**
- * Initialize the widget
- * This function sets up the configuration and loads the Blogger feed
- */
-function initRecentPostsWidget(config = {}) {
-    // Override default config with user settings
-    Object.assign(RecentPostsConfig, config);
-    
-    // Map old variable names to new config (for backward compatibility)
-    if (typeof numPosts !== 'undefined') RecentPostsConfig.numPosts = numPosts;
-    if (typeof showThumbnails !== 'undefined') RecentPostsConfig.showThumbnails = showThumbnails;
-    if (typeof displayMore !== 'undefined') RecentPostsConfig.displayMore = displayMore;
-    if (typeof displaySeparator !== 'undefined') RecentPostsConfig.displaySeparator = displaySeparator;
-    if (typeof showCommentNum !== 'undefined') RecentPostsConfig.showCommentNum = showCommentNum;
-    if (typeof showPostDate !== 'undefined') RecentPostsConfig.showPostDate = showPostDate;
-    if (typeof showPostSummary !== 'undefined') RecentPostsConfig.showPostSummary = showPostSummary;
-    if (typeof numChars !== 'undefined') RecentPostsConfig.numChars = numChars;
-    
-    // Load the Blogger feed
-    const script = document.createElement('script');
-    script.src = '/feeds/posts/default?orderby=published&alt=json-in-script&callback=renderRecentPosts';
-    script.async = true;
-    document.body.appendChild(script);
-}
+        // --- Create HTML for a Single Post ---
+        function createPostElement(post) {
+            const entry = {
+                title: post.title.$t,
+                url: post.link.find(link => link.rel === 'alternate').href,
+                published: new Date(post.published.$t),
+                summary: ("summary" in post) ? post.summary.$t.replace(/<.*?>/g, "") : "",
+                thumbnail: ("media$thumbnail" in post) ? post.media$thumbnail.url : config.noThumbnailImage,
+                comments: ("thr$total" in post) ? post.thr$total.$t : "0"
+            };
+            const listItem = document.createElement('li');
+            listItem.className = 'post-item';
+            let postHTML = '';
+            
+            if (config.showThumbnails) {
+                const resizedThumb = entry.thumbnail.replace(/\/s\d+(-c)?\//, `/s${config.thumbnailSize}-c/`);
+                postHTML += `<a href="${entry.url}" class="post-thumbnail-link"><img src="${resizedThumb}" alt="Thumbnail for ${entry.title}" class="post-thumbnail" loading="lazy" width="${config.thumbnailSize}" height="${config.thumbnailSize}" onerror="this.onerror=null;this.src='${config.noThumbnailImage}';"></a>`;
+            }
+            
+            postHTML += '<div class="post-content">';
+            postHTML += `<h3 class="post-title"><a href="${entry.url}">${entry.title}</a></h3>`;
+            
+            if (config.showSummary && entry.summary) {
+                const shortSummary = entry.summary.substring(0, config.summaryLength) + (entry.summary.length > config.summaryLength ? '...' : '');
+                postHTML += `<p class="post-summary">${shortSummary}</p>`;
+            }
+            
+            postHTML += '<div class="post-meta">';
+            if (config.showDate) {
+                const formattedDate = `${config.monthNames[entry.published.getMonth()]} ${entry.published.getDate()}, ${entry.published.getFullYear()}`;
+                postHTML += `<span class="post-date"><time datetime="${entry.published.toISOString()}">${formattedDate}</time></span>`;
+            }
+            if (config.showComments) {
+                const commentText = entry.comments === '1' ? '1 Comment' : `${entry.comments} Comments`;
+                postHTML += `<span class="post-comments">${commentText}</span>`;
+            }
+            if (config.showReadMore) {
+                postHTML += `<a href="${entry.url}" class="post-read-more">${config.readMoreText}</a>`;
+            }
+            postHTML += '</div></div>'; // End .post-meta and .post-content
+            
+            listItem.innerHTML = postHTML;
+            return listItem;
+        }
+        
+        // --- Create JSON-LD Schema for a Single Post ---
+        function createPostSchema(post) {
+            try {
+                 const entry = {
+                    title: post.title.$t,
+                    url: post.link.find(link => link.rel === 'alternate').href,
+                    published: post.published.$t,
+                    updated: post.updated.$t,
+                    authorName: post.author[0].name.$t,
+                    summary: ("summary" in post) ? post.summary.$t.replace(/<.*?>/g, "").substring(0, 150) : "",
+                    thumbnail: ("media$thumbnail" in post) ? post.media$thumbnail.url.replace(/\/s\d+(-c)?\//, '/s1200/') : config.noThumbnailImage
+                };
+                return { "@type": "BlogPosting", "mainEntityOfPage": { "@type": "WebPage", "@id": entry.url }, "headline": entry.title, "image": entry.thumbnail, "datePublished": entry.published, "dateModified": entry.updated, "author": { "@type": "Person", "name": entry.authorName }, "publisher": { "@type": "Organization", "name": document.title, "logo": { "@type": "ImageObject", "url": "https://placehold.co/600x60/CCCCCC/FFFFFF?text=Your+Logo" } }, "description": entry.summary };
+            } catch(e) {
+                console.warn("Could not generate schema for a post.", e);
+                return null;
+            }
+        }
 
-// Auto-initialize if DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => initRecentPostsWidget());
-} else {
-    initRecentPostsWidget();
-}
+        // --- Error Handling ---
+        function handleInstallError() {
+            displayError("Installation Error: Could not fetch recent posts. Please check the 'blogURL' in the configuration and ensure the blog is public.");
+        }
+
+        function displayError(message) {
+            container.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        // --- Initialize the Widget ---
+        fetchRecentPosts();
+    });
