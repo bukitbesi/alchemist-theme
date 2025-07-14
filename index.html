@@ -1,0 +1,874 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alchemist Theme - Demo Homepage</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Theme Styles -->
+    <link rel="stylesheet" href="css/theme-styles.css" />
+    <link rel="stylesheet" href="css/dark.css" />
+
+    <style>
+      /* Critical CSS from your template */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --primary-color: #2196f3;
+        --secondary-color: #ff5722;
+        --text-color: #000;
+        --bg-color: #fff;
+        --border-color: #e0e0e0;
+        --header-height: 60px;
+        --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+        --max-width: 1200px;
+      }
+
+      /* Dark Mode Variables */
+      [data-theme="dark"] {
+        --text-color: #fff;
+        --bg-color: #1a1a1a;
+        --border-color: #333;
+        --card-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+      }
+
+      /* Base Styles */
+      html {
+        font-size: 16px;
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        transition: var(--transition);
+        margin: 0;
+      }
+
+      a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: var(--transition);
+      }
+      a:hover {
+        opacity: 0.8;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* Header Styles */
+      .site-header {
+        background: var(--bg-color);
+        text-align: center;
+        padding: 1rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      .site-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0;
+      }
+
+      /* Navigation */
+      .main-nav {
+        background: var(--primary-color);
+        padding: 0.75rem 1rem;
+        color: #fff;
+        position: relative;
+      }
+
+      .nav-toggle {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.5rem;
+      }
+
+      .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--primary-color);
+        z-index: 1000;
+      }
+
+      .nav-menu.active {
+        display: block;
+      }
+      .nav-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .nav-menu li {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .nav-menu a {
+        display: block;
+        padding: 1rem;
+        color: #fff;
+        text-decoration: none;
+      }
+      .nav-menu a:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Breaking News Ticker */
+      .breaking-news {
+        background: #2d3436;
+        color: #fff;
+        padding: 0.5rem 0;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .breaking-content {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 1rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .breaking-label {
+        background: var(--primary-color);
+        padding: 0.25rem 1rem;
+        margin-right: 1rem;
+        border-radius: 3px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        white-space: nowrap;
+      }
+
+      .breaking-ticker {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        height: 1.5rem;
+      }
+
+      .ticker-item {
+        position: absolute;
+        white-space: nowrap;
+        animation: ticker 20s linear infinite;
+      }
+
+      @keyframes ticker {
+        0% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      /* Search Bar */
+      .search-container {
+        padding: 1rem;
+        background: #f5f5f5;
+      }
+
+      .search-form {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 25px;
+        font-size: 1rem;
+        background: var(--bg-color);
+        color: var(--text-color);
+      }
+
+      .search-button {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        color: var(--text-color);
+      }
+
+      /* Main Layout */
+      .site-content {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      /* Post Grid */
+      .post-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      /* Post Cards */
+      .post-card {
+        background: var(--bg-color);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .post-thumbnail {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+      }
+
+      .post-content {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .post-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+        color: var(--text-color);
+      }
+
+      .post-meta {
+        font-size: 0.875rem;
+        color: #666;
+        margin-bottom: 0.75rem;
+      }
+
+      .post-excerpt {
+        font-size: 0.875rem;
+        color: #666;
+        line-height: 1.5;
+        flex: 1;
+      }
+
+      .read-more {
+        display: inline-block;
+        margin-top: 1rem;
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: var(--bg-color);
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
+      }
+
+      .widget {
+        margin-bottom: 2rem;
+      }
+
+      .widget h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+      }
+
+      .widget ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .widget li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .widget li:last-child {
+        border-bottom: none;
+      }
+
+      /* Footer */
+      .site-footer {
+        background: var(--gradient-bg);
+        color: #fff;
+        padding: 3rem 1rem 1rem;
+        margin-top: 3rem;
+      }
+
+      .footer-content {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+      }
+
+      .footer-section h3 {
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+      }
+
+      .footer-social {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .footer-social a {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+      }
+
+      .footer-social a:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-3px);
+      }
+
+      .footer-bottom {
+        text-align: center;
+        padding: 2rem 0 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        margin-top: 2rem;
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      /* Back to Top */
+      .back-to-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 50px;
+        height: 50px;
+        background: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        z-index: 100;
+        font-size: 1.5rem;
+      }
+
+      .back-to-top.show {
+        display: flex;
+      }
+
+      /* Dark Mode Toggle */
+      .dark-mode-toggle {
+        position: fixed;
+        bottom: 2rem;
+        left: 2rem;
+        width: 50px;
+        height: 50px;
+        background: var(--text-color);
+        color: var(--bg-color);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        z-index: 100;
+        font-size: 1.5rem;
+      }
+
+      /* Responsive */
+      @media (min-width: 768px) {
+        .site-content {
+          grid-template-columns: 1fr 300px;
+        }
+
+        .nav-toggle {
+          display: none;
+        }
+
+        .nav-menu {
+          display: block !important;
+          position: static;
+          background: none;
+        }
+
+        .nav-menu ul {
+          display: flex;
+          gap: 2rem;
+          justify-content: center;
+        }
+
+        .nav-menu li {
+          border: none;
+        }
+        .nav-menu a {
+          padding: 0.5rem 1rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .post-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="site-header">
+      <h1 class="site-title">
+        <a href="/">Alchemist Theme Demo</a>
+      </h1>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+      <div class="nav-content">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+          ☰
+        </button>
+        <div class="nav-menu" id="nav-menu">
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="#viral">Viral</a></li>
+            <li><a href="#informasi">Informasi</a></li>
+            <li><a href="#islamik">Islamik</a></li>
+            <li><a href="#travel">Travel</a></li>
+            <li><a href="#food">Food</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Breaking News -->
+    <div class="breaking-news">
+      <div class="breaking-content">
+        <div class="breaking-label">Latest</div>
+        <div class="breaking-ticker">
+          <div class="ticker-item">
+            Welcome to Alchemist Theme - A Modern Blogger Template with Maximum
+            SEO Power!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Container -->
+    <div class="search-container">
+      <form class="search-form">
+        <input
+          class="search-input"
+          placeholder="Enter to search..."
+          type="text"
+        />
+        <button class="search-button" type="submit">🔍</button>
+      </form>
+    </div>
+
+    <!-- Main Content -->
+    <main class="site-content">
+      <div class="main-container">
+        <h2 style="margin-bottom: 2rem; color: var(--text-color)">
+          Latest Posts
+        </h2>
+
+        <!-- Post Grid -->
+        <div class="post-grid">
+          <!-- Post Card 1 -->
+          <article class="post-card">
+            <img
+              class="post-thumbnail"
+              src="https://picsum.photos/400/300?random=1"
+              alt="Post thumbnail"
+            />
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="#">Discovering Hidden Gems in Terengganu</a>
+              </h2>
+              <div class="post-meta">
+                <span>January 15, 2025</span> · <span>Travel</span>
+              </div>
+              <p class="post-excerpt">
+                Explore the untouched beaches and traditional villages of
+                Terengganu. From crystal clear waters to authentic local
+                cuisine...
+              </p>
+              <a href="#" class="read-more">Read More →</a>
+            </div>
+          </article>
+
+          <!-- Post Card 2 -->
+          <article class="post-card">
+            <img
+              class="post-thumbnail"
+              src="https://picsum.photos/400/300?random=2"
+              alt="Post thumbnail"
+            />
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="#">Traditional Malay Recipes from Bukit Besi</a>
+              </h2>
+              <div class="post-meta">
+                <span>January 14, 2025</span> · <span>Food</span>
+              </div>
+              <p class="post-excerpt">
+                Learn how to cook authentic Malay dishes passed down through
+                generations. These recipes capture the essence of local
+                flavors...
+              </p>
+              <a href="#" class="read-more">Read More →</a>
+            </div>
+          </article>
+
+          <!-- Post Card 3 -->
+          <article class="post-card">
+            <img
+              class="post-thumbnail"
+              src="https://picsum.photos/400/300?random=3"
+              alt="Post thumbnail"
+            />
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="#">Islamic Architecture in Modern Malaysia</a>
+              </h2>
+              <div class="post-meta">
+                <span>January 13, 2025</span> · <span>Islamik</span>
+              </div>
+              <p class="post-excerpt">
+                A journey through Malaysia's most beautiful mosques and Islamic
+                architectural marvels, blending tradition with modernity...
+              </p>
+              <a href="#" class="read-more">Read More →</a>
+            </div>
+          </article>
+
+          <!-- Post Card 4 -->
+          <article class="post-card">
+            <img
+              class="post-thumbnail"
+              src="https://picsum.photos/400/300?random=4"
+              alt="Post thumbnail"
+            />
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="#">Latest Tech Trends in Southeast Asia</a>
+              </h2>
+              <div class="post-meta">
+                <span>January 12, 2025</span> · <span>Informasi</span>
+              </div>
+              <p class="post-excerpt">
+                Stay updated with the latest technological advancements and
+                digital transformation happening across Southeast Asian
+                countries...
+              </p>
+              <a href="#" class="read-more">Read More →</a>
+            </div>
+          </article>
+
+          <!-- Post Card 5 -->
+          <article class="post-card">
+            <img
+              class="post-thumbnail"
+              src="https://picsum.photos/400/300?random=5"
+              alt="Post thumbnail"
+            />
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="#">Viral Street Food You Must Try</a>
+              </h2>
+              <div class="post-meta">
+                <span>January 11, 2025</span> · <span>Viral</span>
+              </div>
+              <p class="post-excerpt">
+                From TikTok to your taste buds - discover the street food that's
+                taking social media by storm. Here's where to find them...
+              </p>
+              <a href="#" class="read-more">Read More →</a>
+            </div>
+          </article>
+
+          <!-- Post Card 6 -->
+          <article class="post-card">
+            <img
+              class="post-thumbnail"
+              src="https://picsum.photos/400/300?random=6"
+              alt="Post thumbnail"
+            />
+            <div class="post-content">
+              <h2 class="post-title">
+                <a href="#">Weekend Getaway: Island Hopping Guide</a>
+              </h2>
+              <div class="post-meta">
+                <span>January 10, 2025</span> · <span>Travel</span>
+              </div>
+              <p class="post-excerpt">
+                Plan your perfect island hopping adventure with our
+                comprehensive guide to Malaysia's most beautiful islands...
+              </p>
+              <a href="#" class="read-more">Read More →</a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Pagination -->
+        <nav
+          class="pagination"
+          style="
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 3rem;
+          "
+        >
+          <a
+            href="#"
+            class="btn btn-primary"
+            style="
+              padding: 0.75rem 1.5rem;
+              background: var(--primary-color);
+              color: white;
+              border-radius: 5px;
+            "
+            >← Newer Posts</a
+          >
+          <a
+            href="#"
+            class="btn btn-secondary"
+            style="
+              padding: 0.75rem 1.5rem;
+              background: #f0f0f0;
+              color: var(--text-color);
+              border-radius: 5px;
+            "
+            >Older Posts →</a
+          >
+        </nav>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <!-- Popular Posts Widget -->
+        <div class="widget">
+          <h3>Popular Posts</h3>
+          <ul>
+            <li><a href="#">10 Best Beaches in Terengganu</a></li>
+            <li><a href="#">Traditional Crafts of Bukit Besi</a></li>
+            <li><a href="#">Malaysian Food Guide for Beginners</a></li>
+            <li><a href="#">Islamic Festivals in Malaysia</a></li>
+            <li><a href="#">Budget Travel Tips for Southeast Asia</a></li>
+          </ul>
+        </div>
+
+        <!-- Categories Widget -->
+        <div class="widget">
+          <h3>Categories</h3>
+          <ul>
+            <li><a href="#">Travel (25)</a></li>
+            <li><a href="#">Food (18)</a></li>
+            <li><a href="#">Islamik (15)</a></li>
+            <li><a href="#">Informasi (22)</a></li>
+            <li><a href="#">Viral (12)</a></li>
+          </ul>
+        </div>
+
+        <!-- About Widget -->
+        <div class="widget">
+          <h3>About</h3>
+          <p style="font-size: 0.875rem; line-height: 1.6">
+            We simply share anything that everyone enjoys reading. Your guide to
+            Terengganu's hidden gems and more. ❤ - Bukit Besi Blog
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About Us</h3>
+          <p>
+            We simply share anything that everyone enjoys reading, but
+            information can be both good and bad. ❤ - Bukit Besi Blog
+          </p>
+          <div class="footer-social">
+            <a href="#" aria-label="Facebook">📘</a>
+            <a href="#" aria-label="Twitter">🐦</a>
+            <a href="#" aria-label="Instagram">📷</a>
+            <a href="#" aria-label="RSS">📡</a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul style="list-style: none; padding: 0">
+            <li style="margin-bottom: 0.5rem">
+              <a href="#" style="color: rgba(255, 255, 255, 0.8)">Contact</a>
+            </li>
+            <li style="margin-bottom: 0.5rem">
+              <a href="#" style="color: rgba(255, 255, 255, 0.8)">About</a>
+            </li>
+            <li style="margin-bottom: 0.5rem">
+              <a href="#" style="color: rgba(255, 255, 255, 0.8)"
+                >Privacy Policy</a
+              >
+            </li>
+            <li style="margin-bottom: 0.5rem">
+              <a href="#" style="color: rgba(255, 255, 255, 0.8)"
+                >Terms of Service</a
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Newsletter</h3>
+          <p>Subscribe to get the latest updates directly to your inbox.</p>
+          <form style="margin-top: 1rem">
+            <input
+              type="email"
+              placeholder="Your email"
+              style="
+                width: 100%;
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                border-radius: 5px;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                width: 100%;
+                padding: 0.75rem;
+                background: white;
+                color: var(--primary-color);
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Alchemist Theme Demo. All Rights Reserved.</p>
+        <p>Theme by Bukit Besi | Powered by Blogger</p>
+      </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="back-to-top">↑</button>
+
+    <!-- Dark Mode Toggle -->
+    <button class="dark-mode-toggle" id="dark-mode-toggle">🌙</button>
+
+    <!-- Scripts -->
+    <script>
+      // Mobile Menu Toggle
+      const navToggle = document.getElementById("nav-toggle");
+      const navMenu = document.getElementById("nav-menu");
+
+      navToggle.addEventListener("click", () => {
+        navMenu.classList.toggle("active");
+      });
+
+      // Dark Mode Toggle
+      const darkModeToggle = document.getElementById("dark-mode-toggle");
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme) {
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        darkModeToggle.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+      }
+
+      darkModeToggle.addEventListener("click", () => {
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        darkModeToggle.textContent = newTheme === "dark" ? "☀️" : "🌙";
+      });
+
+      // Back to Top
+      const backToTop = document.getElementById("back-to-top");
+
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 300) {
+          backToTop.classList.add("show");
+        } else {
+          backToTop.classList.remove("show");
+        }
+      });
+
+      backToTop.addEventListener("click", () => {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      });
+    </script>
+
+    <!-- Load theme scripts -->
+    <script src="js/theme-scripts.js" defer></script>
+  </body>
+</html>
