@@ -240,7 +240,7 @@
     /* Post Cards */
     .post-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -847,7 +847,7 @@
                                                         <data:label.name />
                                                     </a>
                                                     <b:if
-                                                        cond='data:label.isLast != &quot;true&quot;'>
+                                                        cond='data:label.isLast != "true"'>
                                                 , </b:if>
                                                 </b:loop>
                                             </span>
@@ -865,17 +865,17 @@
                                     <div class='share-buttons'>
                                         <h4>Share this post:</h4>
                                         <a class='share-btn share-facebook'
-                                            expr:href='&quot;https://www.facebook.com/sharer/sharer.php?u=&quot; + data:post.url'
+                                            expr:href='"https://www.facebook.com/sharer/sharer.php?u=" + data:post.url'
                                             target='_blank' rel='noopener'>
                                             📘 Facebook
                                         </a>
                                         <a class='share-btn share-twitter'
-                                            expr:href='&quot;https://twitter.com/intent/tweet?url=&quot; + data:post.url + &quot;&amp;text=&quot; + data:post.title'
+                                            expr:href='"https://twitter.com/intent/tweet?url=" + data:post.url + "&amp;text=" + data:post.title'
                                             target='_blank' rel='noopener'>
                                             🐦 Twitter
                                         </a>
                                         <a class='share-btn share-whatsapp'
-                                            expr:href='&quot;https://wa.me/?text=&quot; + data:post.title + &quot; &quot; + data:post.url'
+                                            expr:href='"https://wa.me/?text=" + data:post.title + " " + data:post.url'
                                             target='_blank' rel='noopener'>
                                             💬 WhatsApp
                                         </a>
@@ -1148,7 +1148,7 @@
         </button>
 
         <!-- Critical JavaScript Inline -->
-        <script>
+        <script><![CDATA[
             // Current Year
             document.getElementById('current-year').textContent = new Date().getFullYear();
 
@@ -1156,7 +1156,7 @@
             const navToggle = document.getElementById('nav-toggle');
             const navMenu = document.getElementById('nav-menu');
 
-            if (navToggle &amp;&amp; navMenu) {
+            if (navToggle && navMenu) {
             navToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             });
@@ -1164,17 +1164,17 @@
 
             // Breaking News Ticker
             function initBreakingNews() {
-            fetch('/feeds/posts/default?alt=json&amp;max-results=10&amp;orderby=published')
-            .then(response =&gt; response.json())
-            .then(data =&gt; {
+            fetch('/feeds/posts/default?alt=json&max-results=10&orderby=published')
+            .then(response => response.json())
+            .then(data => {
             const entries = data.feed.entry || [];
             const ticker = document.getElementById('breaking-ticker');
 
-            if (entries.length &gt; 0 &amp;&amp; ticker) {
+            if (entries.length > 0 && ticker) {
             ticker.innerHTML = '';
-            entries.forEach((entry, index) =&gt; {
+            entries.forEach((entry, index) => {
             const title = entry.title.$t;
-            const link = entry.link.find(l =&gt; l.rel === 'alternate').href;
+            const link = entry.link.find(l => l.rel === 'alternate').href;
             const item = document.createElement('a');
             item.href = link;
             item.className = 'ticker-item';
@@ -1184,7 +1184,7 @@
             });
             }
             })
-            .catch(error =&gt; console.error('Error fetching breaking news:', error));
+            .catch(error => console.error('Error fetching breaking news:', error));
             }
 
             // Theme Toggle
@@ -1212,13 +1212,13 @@
             let scrollTimeout;
 
             if (backToTop) {
-            window.addEventListener('scroll', () =&gt; {
+            window.addEventListener('scroll', () => {
             if (scrollTimeout) {
             window.cancelAnimationFrame(scrollTimeout);
             }
 
             scrollTimeout = window.requestAnimationFrame(function() {
-            if (window.scrollY &gt; 300) {
+            if (window.scrollY > 300) {
             backToTop.classList.add('show');
             } else {
             backToTop.classList.remove('show');
@@ -1234,24 +1234,24 @@
             // Auto Paragraph Fixer (Transmutation Script)
             function fixParagraphs() {
             const postBody = document.querySelector('.post-body');
-            if (postBody &amp;&amp; postBody.innerHTML.includes('&lt;br')) {
+            if (postBody && postBody.innerHTML.includes('<br')) {
             let content = postBody.innerHTML;
 
             // Replace multiple br tags with paragraph breaks
-            content = content.replace(/(&lt;br\s*\/?&gt;){2,}/gi, '&lt;/p&gt;&lt;p&gt;');
+            content = content.replace(/(<br\s*\/?>){2,}/gi, '</p><p>');
 
             // Wrap content that starts without a paragraph tag
-            if (!content.trim().startsWith('&lt;p')) {
-            content = '&lt;p&gt;' + content;
+            if (!content.trim().startsWith('<p')) {
+            content = '<p>' + content;
             }
 
             // Ensure content ends with closing paragraph
-            if (!content.trim().endsWith('&lt;/p&gt;')) {
-            content = content + '&lt;/p&gt;';
+            if (!content.trim().endsWith('</p>')) {
+            content = content + '</p>';
             }
 
             // Clean up empty paragraphs
-            content = content.replace(/&lt;p&gt;\s*&lt;\/p&gt;/g, '');
+            content = content.replace(/<p>\s*<\/p>/g, '');
 
             postBody.innerHTML = content;
             }
@@ -1262,12 +1262,12 @@
             const tocContainer = document.getElementById('auto-toc');
             const postBody = document.querySelector('.post-body');
 
-            if (tocContainer &amp;&amp; postBody) {
+            if (tocContainer && postBody) {
             const headings = postBody.querySelectorAll('h2, h3');
 
-            if (headings.length &gt; 3) {
-            const tocHTML = ['&lt;h3 class=&quot;toc-title&quot;&gt;Table of
-            Contents&lt;/h3&gt;&lt;ul class=&quot;toc-list&quot;&gt;'];
+            if (headings.length > 3) {
+            const tocHTML = ['<h3 class="toc-title">Table of
+            Contents</h3><ul class="toc-list">'];
             headings.forEach(function(heading, index) {
             const id = 'toc-' + index;
             heading.id = id;
@@ -1275,11 +1275,11 @@
             const level = heading.tagName.toLowerCase();
             const className = level === 'h3' ? 'toc-h3' : '';
 
-            tocHTML.push('&lt;li class=&quot;' + className + '&quot;&gt;&lt;a href=&quot;#' + id +
-            '&quot;&gt;' + heading.textContent + '&lt;/a&gt;&lt;/li&gt;');
+            tocHTML.push('<li class="' + className + '"><a href="#' + id +
+            '">' + heading.textContent + '</a></li>');
             });
 
-            tocHTML.push('&lt;/ul&gt;');
+            tocHTML.push('</ul>');
             tocContainer.innerHTML = tocHTML.join('');
             tocContainer.style.display = 'block';
             }
@@ -1306,15 +1306,15 @@
             // Related Posts Fetcher
             function fetchRelatedPosts() {
             const container = document.getElementById('related-posts-container');
-            if (container &amp;&amp; window.location.pathname !== '/') {
+            if (container && window.location.pathname !== '/') {
             // Get current page category from breadcrumb or other source
             const categoryLink = document.querySelector('.breadcrumbs
-            a[href*=&quot;/search/label/&quot;]');
+            a[href*="/search/label/"]');
             if (categoryLink) {
             const categoryName = categoryLink.textContent;
 
             fetch('/feeds/posts/default/-/' + encodeURIComponent(categoryName) +
-            '?alt=json&amp;max-results=6')
+            '?alt=json&max-results=6')
             .then(function(response) { return response.json(); })
             .then(function(data) {
             const entries = data.feed.entry || [];
@@ -1324,18 +1324,18 @@
             'alternate'; }).href !== currentUrl; })
             .slice(0, 4);
 
-            if (relatedPosts.length &gt; 0) {
+            if (relatedPosts.length > 0) {
             const html = relatedPosts.map(function(post) {
             const title = post.title.$t;
             const link = post.link.find(function(l) { return l.rel === 'alternate'; }).href;
             const thumbnail = post.media$thumbnail ? post.media$thumbnail.url : '';
 
-            return '&lt;div class=&quot;post-card&quot;&gt;' +
-            (thumbnail ? '&lt;img class=&quot;post-thumbnail&quot; src=&quot;' + thumbnail + '&quot;
-            alt=&quot;' + title + '&quot; loading=&quot;lazy&quot;&gt;' : '&lt;div
-            class=&quot;post-thumbnail&quot;&gt;📄&lt;/div&gt;') +
-            '&lt;div class=&quot;post-content&quot;&gt;&lt;h4&gt;&lt;a href=&quot;' + link +
-            '&quot;&gt;' + title + '&lt;/a&gt;&lt;/h4&gt;&lt;/div&gt;&lt;/div&gt;';
+            return '<div class="post-card">' +
+            (thumbnail ? '<img class="post-thumbnail" src="' + thumbnail + '"
+            alt="' + title + '" loading="lazy">' : '<div
+            class="post-thumbnail">📄</div>') +
+            '<div class="post-content"><h4><a href="' + link +
+            '">' + title + '</a></h4></div></div>';
             }).join('');
 
             container.innerHTML = html;
@@ -1359,7 +1359,7 @@
 
             headings.forEach(function(heading) {
             const nextElement = heading.nextElementSibling;
-            if (nextElement &amp;&amp; nextElement.tagName === 'P') {
+            if (nextElement && nextElement.tagName === 'P') {
             potentialFAQs.push({
             question: heading.textContent,
             answer: nextElement.textContent
@@ -1367,17 +1367,17 @@
             }
             });
 
-            if (potentialFAQs.length &gt;= 3) {
+            if (potentialFAQs.length >= 3) {
             schemas.push({
-            &quot;@context&quot;: &quot;https://schema.org&quot;,
-            &quot;@type&quot;: &quot;FAQPage&quot;,
-            &quot;mainEntity&quot;: potentialFAQs.map(function(faq) {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": potentialFAQs.map(function(faq) {
             return {
-            &quot;@type&quot;: &quot;Question&quot;,
-            &quot;name&quot;: faq.question,
-            &quot;acceptedAnswer&quot;: {
-            &quot;@type&quot;: &quot;Answer&quot;,
-            &quot;text&quot;: faq.answer
+            "@type": "Question",
+            "name": faq.question,
+            "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.answer
             }
             };
             })
@@ -1414,7 +1414,7 @@
 
             // Make functions globally available
             window.copyPostLink = copyPostLink;
-        </script>
+        ]]></script>
 
         <script defer='defer'
             src='https://cdn.jsdelivr.net/gh/bukitbesi/alchemist-theme@main/js/theme-scripts.js'></script>
