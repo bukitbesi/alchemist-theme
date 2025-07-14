@@ -206,25 +206,34 @@
     }
 
     fixBrTags() {
-      let content = this.postBody.innerHTML;
+      const postBody = this.postBody;
+      if (postBody && postBody.innerHTML.includes('<br')) {
+        let content = postBody.innerHTML;
 
-      // Only process if no paragraphs exist
-      if (!content.includes("<p>") && content.includes("<br")) {
-        // Replace double BR with paragraph breaks
-        content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
+        // 1. Normalize line breaks and remove leading/trailing whitespace from the whole block
+        content = content.trim();
 
-        // Wrap content in paragraphs
-        if (!content.startsWith("<p>")) {
-          content = "<p>" + content;
-        }
-        if (!content.endsWith("</p>")) {
-          content = content + "</p>";
-        }
+        // 2. Replace any sequence of 2 or more <br> tags with a single placeholder
+        // This simplifies the logic for wrapping.
+        content = content.replace(/(<br\s*\/?>\s*){2,}/gi, '<!-- PARAGRAPH_BREAK -->');
 
-        // Clean up empty paragraphs
+        // 3. Split the content by the placeholder to create paragraph-like segments
+        let segments = content.split('<!-- PARAGRAPH_BREAK -->');
+
+        // 4. Wrap each segment in <p> tags, trimming whitespace and removing leftover <br> tags
+        content = segments.map(segment => {
+          // Trim whitespace from the segment
+          let cleanSegment = segment.trim();
+          // Replace any remaining single <br> tags with a space
+          cleanSegment = cleanSegment.replace(/<br\s*\/?>/gi, ' ');
+          // Return the segment wrapped in a <p> tag if it's not empty
+          return cleanSegment ? `<p>${cleanSegment}</p>` : '';
+        }).join('');
+
+        // 5. Clean up any empty paragraphs that might have been created
         content = content.replace(/<p>\s*<\/p>/g, "");
 
-        this.postBody.innerHTML = content;
+        postBody.innerHTML = content;
       }
     }
 
