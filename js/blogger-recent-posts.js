@@ -1,7 +1,7 @@
     /**
      * @name   Enhanced Recent Posts Widget for Blogger
      * @version 2.1.0 (Vanilla JS Version)
-     * @author Ismail (Inspired by Info Arlina)
+     * @author TBB
      * @description A modern, SEO-optimized, and performance-focused recent posts widget using vanilla JavaScript.
      * Features: JSON-LD Schema for SEO, lazy loading, semantic HTML, and easy configuration.
      * No jQuery or AI features.
