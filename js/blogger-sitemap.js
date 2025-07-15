@@ -1,7 +1,5 @@
 /**
- * Optimized Blogger Sitemap with Thumbnails
- * Version: 2.0
- * Features: Vanilla JS, SEO Optimized, Schema.org Support, Performance Optimized
+ * Created by The Bukit Besi
  */
 
 (function() {
@@ -9,297 +7,264 @@
     
     // Configuration
     const config = {
-        numfeed: 18,
-        startfeed: 0,
-        urlblog: "https://bukitbesi.blogspot.com/",
-        charac: 0,
-        defaultThumb: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjhu_1tNK6stn8njZTiqOyJoK83q2bAIu9wlUGQ9k4KeIvMm26jqiTi5GHPY-uynpKkTQ6bLhWDZSXv1Nof4VRA7qasG1O29zFNjLhQ4oQgpZO2Kml7klSCpRp4MDuermU4Twrz9Lco05Bv/s1600/no-image.png",
-        loadingGif: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhzZyAHdLYscDdye1hvM4uiTcvKO9KaklJPy-kU37jrfKm3JnOp45vq2nl-NSuqNKTlydEYwWbB2b3mGHTktavqTpyZUJE7TX11qe4LyUtrZUH6HWviyEl90jjYIQQUagABtv7p4kURFjNp/s1600/ellipsis-preloader.gif"
+        numPosts: 18,
+        blogUrl: 'https://bukitbesi.blogspot.com',
+        noImageUrl: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjhu_1tNK6stn8njZTiqOyJoK83q2bAIu9wlUGQ9k4KeIvMm26jqiTi5GHPY-uynpKkTQ6bLhWDZSXv1Nof4VRA7qasG1O29zFNjLhQ4oQgpZO2Kml7klSCpRp4MDuermU4Twrz9Lco05Bv/s1600/no-image.png',
+        excerptLength: 0, // Set to 0 to disable excerpts
+        imageSize: 's72-c', // Optimize image size
+        startIndex: 1
     };
     
     // State management
-    let state = {
-        urlprevious: "",
-        urlnext: "",
-        currentScript: null
+    const state = {
+        currentScript: null,
+        urlPrevious: '',
+        urlNext: '',
+        posts: []
     };
     
     /**
      * Strip HTML tags and truncate text
-     * @param {string} html - HTML content
-     * @param {number} maxLength - Maximum character length
-     * @returns {string} Plain text truncated to maxLength
      */
     function stripHtml(html, maxLength) {
-        const tmp = document.createElement("div");
+        if (!maxLength || maxLength === 0) return '';
+        
+        const tmp = document.createElement('div');
         tmp.innerHTML = html;
-        let text = tmp.textContent || tmp.innerText || "";
-        return maxLength > 0 ? text.substring(0, maxLength - 1) : text;
+        const text = tmp.textContent || tmp.innerText || '';
+        return text.substring(0, maxLength - 1);
     }
     
     /**
      * Get optimized thumbnail URL
-     * @param {string} url - Original thumbnail URL
-     * @returns {string} Optimized thumbnail URL
      */
-    function getOptimizedThumb(url) {
-        if (!url) return config.defaultThumb;
-        
-        // Replace with optimized size for better performance
-        return url.replace(/\/s\d+(-c)?\//, '/s72-c/');
+    function getThumbnail(entry) {
+        if ('media$thumbnail' in entry) {
+            // Replace with optimized size
+            return entry.media$thumbnail.url.replace(/\/s\d+(-c)?\//, `/${config.imageSize}/`);
+        }
+        return config.noImageUrl;
     }
     
     /**
-     * Create Schema.org JSON-LD for blog posting
-     * @param {Array} entries - Blog post entries
-     * @returns {object} Schema.org structured data
+     * Generate Schema.org JSON-LD
      */
-    function createSchemaData(entries) {
+    function generateSchema(posts) {
         const schema = {
             "@context": "https://schema.org",
-            "@type": "Blog",
-            "url": config.urlblog,
-            "blogPost": entries.map(entry => ({
-                "@type": "BlogPosting",
-                "headline": entry.title,
-                "url": entry.url,
-                "thumbnailUrl": entry.thumbnail,
-                "description": entry.summary
+            "@type": "ItemList",
+            "name": "Blog Sitemap",
+            "description": "Complete list of blog posts with thumbnails",
+            "url": window.location.href,
+            "numberOfItems": posts.length,
+            "itemListElement": posts.map((post, index) => ({
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": {
+                    "@type": "BlogPosting",
+                    "name": post.title,
+                    "url": post.url,
+                    "image": post.thumbnail,
+                    "description": post.excerpt || post.title
+                }
             }))
         };
         
-        return schema;
-    }
-    
-    /**
-     * Inject Schema.org data into page
-     * @param {object} schemaData - Schema.org structured data
-     */
-    function injectSchema(schemaData) {
         // Remove existing schema if any
         const existingSchema = document.getElementById('sitemap-schema');
         if (existingSchema) {
             existingSchema.remove();
         }
         
+        // Add new schema
         const script = document.createElement('script');
         script.type = 'application/ld+json';
         script.id = 'sitemap-schema';
-        script.textContent = JSON.stringify(schemaData);
+        script.textContent = JSON.stringify(schema);
         document.head.appendChild(script);
     }
     
     /**
-     * Create post element with lazy loading
-     * @param {object} post - Post data
-     * @returns {string} HTML string for post element
+     * Render posts with lazy loading for images
      */
-    function createPostElement(post) {
-        return `
-            <div class='recentpostel'>
-                <a href='${post.url}' title='${post.title}'>
-                    <img src='${post.thumbnail}' 
-                         alt='${post.title}' 
-                         loading='lazy'
-                         width='72' 
-                         height='72' />
-                </a>
-                <h6><a href='${post.url}' title='${post.title}'>${post.title}</a></h6>
-                <p>${post.summary}</p>
-            </div>
-        `;
-    }
-    
-    /**
-     * Process feed data and render posts
-     * @param {object} json - Blogger feed JSON response
-     */
-    function processFeed(json) {
-        // Clear navigation URLs
-        state.urlprevious = "";
-        state.urlnext = "";
+    function renderPosts(data) {
+        const container = document.getElementById('recentpostsae');
+        const navContainer = document.getElementById('recentpostnavfeed');
         
-        // Extract navigation links
-        if (json.feed.link) {
-            json.feed.link.forEach(link => {
-                if (link.rel === "previous") state.urlprevious = link.href;
-                if (link.rel === "next") state.urlnext = link.href;
+        if (!container || !navContainer) return;
+        
+        // Extract navigation URLs
+        state.urlPrevious = '';
+        state.urlNext = '';
+        
+        if (data.feed.link) {
+            data.feed.link.forEach(link => {
+                if (link.rel === 'previous') state.urlPrevious = link.href;
+                if (link.rel === 'next') state.urlNext = link.href;
             });
         }
         
-        // Process entries
-        const posts = [];
-        const entries = json.feed.entry || [];
-        const maxPosts = Math.min(config.numfeed, entries.length);
+        // Process posts
+        state.posts = [];
+        const fragment = document.createDocumentFragment();
         
-        for (let i = 0; i < maxPosts; i++) {
-            const entry = entries[i];
-            const post = {
-                title: entry.title.$t,
-                url: "",
-                summary: "",
-                thumbnail: config.defaultThumb
-            };
+        data.feed.entry.slice(0, config.numPosts).forEach(entry => {
+            const title = entry.title.$t;
+            let url = '';
             
-            // Get post URL
+            // Find alternate link
             if (entry.link) {
-                for (let j = 0; j < entry.link.length; j++) {
-                    if (entry.link[j].rel === "alternate") {
-                        post.url = entry.link[j].href;
-                        break;
-                    }
-                }
+                const altLink = entry.link.find(link => link.rel === 'alternate');
+                if (altLink) url = altLink.href;
             }
             
-            // Get summary
-            if (entry.content) {
-                post.summary = stripHtml(entry.content.$t, config.charac);
-            } else if (entry.summary) {
-                post.summary = stripHtml(entry.summary.$t, config.charac);
-            }
+            const content = entry.content?.$t || entry.summary?.$t || '';
+            const thumbnail = getThumbnail(entry);
+            const excerpt = stripHtml(content, config.excerptLength);
             
-            // Get thumbnail
-            if (entry.media$thumbnail) {
-                post.thumbnail = getOptimizedThumb(entry.media$thumbnail.url);
-            }
+            // Store for schema
+            state.posts.push({ title, url, thumbnail, excerpt });
             
-            posts.push(post);
-        }
+            // Create post element
+            const postEl = document.createElement('div');
+            postEl.className = 'recentpostel';
+            
+            // Use template literals for better readability
+            postEl.innerHTML = `
+                <a href="${url}" rel="bookmark">
+                    <img src="${thumbnail}" 
+                         alt="${title}" 
+                         loading="lazy" 
+                         width="72" 
+                         height="72">
+                </a>
+                <h6><a href="${url}" rel="bookmark">${title}</a></h6>
+                ${excerpt ? `<p>${excerpt}</p>` : ''}
+            `;
+            
+            fragment.appendChild(postEl);
+        });
         
-        // Render posts
-        renderPosts(posts);
+        // Clear and append
+        container.innerHTML = '';
+        container.appendChild(fragment);
         
         // Render navigation
         renderNavigation();
         
-        // Inject Schema.org data
-        injectSchema(createSchemaData(posts));
+        // Generate schema
+        generateSchema(state.posts);
     }
     
     /**
-     * Render posts to DOM
-     * @param {Array} posts - Array of post objects
-     */
-    function renderPosts(posts) {
-        const container = document.getElementById("recentpostsae");
-        if (!container) return;
-        
-        const html = posts.map(post => createPostElement(post)).join('');
-        container.innerHTML = html;
-        
-        // Trigger layout after render
-        requestAnimationFrame(() => {
-            container.style.opacity = '1';
-        });
-    }
-    
-    /**
-     * Render navigation buttons
+     * Render navigation with improved accessibility
      */
     function renderNavigation() {
-        const navContainer = document.getElementById("recentpostnavfeed");
+        const navContainer = document.getElementById('recentpostnavfeed');
         if (!navContainer) return;
         
-        let navHtml = "";
+        const nav = document.createElement('nav');
+        nav.setAttribute('aria-label', 'Sitemap pagination');
+        
+        let navHtml = '';
         
         // Previous button
-        if (state.urlprevious) {
-            navHtml += `<a href='javascript:void(0);' class='previous' onclick='BloggerSitemap.navigate(-1);' aria-label='Previous page'>
-                <i class='fas fa-arrow-left' aria-hidden='true'></i>
-            </a>`;
+        if (state.urlPrevious) {
+            navHtml += `<a href="javascript:void(0);" 
+                           class="previous" 
+                           onclick="BloggerSitemap.navigate(-1)"
+                           aria-label="Previous page">
+                           <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </a>`;
         } else {
-            navHtml += `<span class='noactived previous' aria-disabled='true'>
-                <i class='fas fa-arrow-left' aria-hidden='true'></i>
-            </span>`;
+            navHtml += `<span class="noactived previous" aria-disabled="true">
+                           <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </span>`;
         }
         
         // Next button
-        if (state.urlnext) {
-            navHtml += `<a href='javascript:void(0);' class='next' onclick='BloggerSitemap.navigate(1);' aria-label='Next page'>
-                <i class='fas fa-arrow-right' aria-hidden='true'></i>
-            </a>`;
+        if (state.urlNext) {
+            navHtml += `<a href="javascript:void(0);" 
+                           class="next" 
+                           onclick="BloggerSitemap.navigate(1)"
+                           aria-label="Next page">
+                           <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </a>`;
         } else {
-            navHtml += `<span class='noactived next' aria-disabled='true'>
-                <i class='fas fa-arrow-right' aria-hidden='true'></i>
-            </span>`;
+            navHtml += `<span class="noactived next" aria-disabled="true">
+                           <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </span>`;
         }
         
         // Home button
-        navHtml += `<a href='javascript:void(0);' class='home' onclick='BloggerSitemap.navigate(0);' aria-label='First page'>
-            <i class='fas fa-home' aria-hidden='true'></i>
-        </a>`;
+        navHtml += `<a href="javascript:void(0);" 
+                       class="home" 
+                       onclick="BloggerSitemap.navigate(0)"
+                       aria-label="First page">
+                       <i class="fas fa-home" aria-hidden="true"></i>
+                    </a>`;
         
-        navContainer.innerHTML = navHtml;
+        nav.innerHTML = navHtml;
+        navContainer.innerHTML = '';
+        navContainer.appendChild(nav);
     }
     
     /**
-     * Show loading state
+     * Load feed data with error handling
      */
-    function showLoading() {
-        const postsContainer = document.getElementById("recentpostsae");
-        const navContainer = document.getElementById("recentpostnavfeed");
-        
-        if (postsContainer) {
-            postsContainer.style.opacity = '0.5';
-            postsContainer.innerHTML = `<div id='recentpostload' style='background-image: url(${config.loadingGif})'></div>`;
-        }
-        
-        if (navContainer) {
-            navContainer.innerHTML = "";
-        }
-    }
-    
-    /**
-     * Navigate to different page
-     * @param {number} direction - -1 for previous, 1 for next, 0 for home
-     */
-    function navigate(direction) {
-        let queryString;
-        
-        if (direction === -1 && state.urlprevious) {
-            const idx = state.urlprevious.indexOf("?");
-            queryString = state.urlprevious.substring(idx);
-        } else if (direction === 1 && state.urlnext) {
-            const idx = state.urlnext.indexOf("?");
-            queryString = state.urlnext.substring(idx);
-        } else {
-            queryString = `?start-index=1&max-results=${config.numfeed}&orderby=published&alt=json-in-script`;
-        }
-        
-        queryString += "&callback=BloggerSitemap.processFeed";
-        loadFeed(queryString);
-    }
-    
-    /**
-     * Load feed data via JSONP
-     * @param {string} queryString - Query parameters for feed
-     */
-    function loadFeed(queryString) {
+    function loadFeed(params) {
         // Show loading state
-        showLoading();
+        const container = document.getElementById('recentpostsae');
+        const navContainer = document.getElementById('recentpostnavfeed');
         
-        // Remove existing script if any
+        if (container) {
+            container.innerHTML = '<div id="recentpostload" aria-live="polite" aria-label="Loading posts"></div>';
+        }
+        if (navContainer) {
+            navContainer.innerHTML = '';
+        }
+        
+        // Remove previous script if exists
         if (state.currentScript) {
             state.currentScript.remove();
             state.currentScript = null;
         }
         
-        // Create new script element
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = `${config.urlblog}feeds/posts/default${queryString}`;
-        script.id = "galihlabel";
+        // Build URL
+        const url = `${config.blogUrl}/feeds/posts/default${params}&callback=BloggerSitemap.handleData`;
+        
+        // Create and load script
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = url;
+        script.id = 'sitemap-feed-script';
         script.onerror = function() {
-            console.error("Failed to load feed");
-            const container = document.getElementById("recentpostsae");
             if (container) {
-                container.innerHTML = "<p>Error loading posts. Please try again.</p>";
+                container.innerHTML = '<div class="error">Failed to load posts. Please try again.</div>';
             }
         };
         
-        // Add script to document
-        document.head.appendChild(script);
         state.currentScript = script;
+        document.head.appendChild(script);
+    }
+    
+    /**
+     * Navigation handler
+     */
+    function navigate(direction) {
+        let params = '';
+        
+        if (direction === -1 && state.urlPrevious) {
+            const index = state.urlPrevious.indexOf('?');
+            params = state.urlPrevious.substring(index);
+        } else if (direction === 1 && state.urlNext) {
+            const index = state.urlNext.indexOf('?');
+            params = state.urlNext.substring(index);
+        } else {
+            params = `?start-index=${config.startIndex}&max-results=${config.numPosts}&orderby=published&alt=json-in-script`;
+        }
+        
+        loadFeed(params);
     }
     
     /**
@@ -307,15 +272,15 @@
      */
     function init() {
         // Check if containers exist
-        const postsContainer = document.getElementById("recentpostsae");
-        const navContainer = document.getElementById("recentpostnavfeed");
+        const container = document.getElementById('recentpostsae');
+        const navContainer = document.getElementById('recentpostnavfeed');
         
-        if (!postsContainer || !navContainer) {
-            console.error("Sitemap containers not found");
+        if (!container || !navContainer) {
+            console.error('Sitemap containers not found');
             return;
         }
         
-        // Start loading first page
+        // Start loading
         navigate(0);
     }
     
@@ -323,12 +288,13 @@
     window.BloggerSitemap = {
         init: init,
         navigate: navigate,
-        processFeed: processFeed
+        handleData: renderPosts,
+        config: config // Allow runtime configuration
     };
     
     // Auto-initialize when DOM is ready
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
