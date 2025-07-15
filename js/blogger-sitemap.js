@@ -9,7 +9,7 @@
     const CONFIG = {
         blogUrl: 'https://bukitbesi.blogspot.com',
         postsPerLabel: 6, // Posts to show per category
-        imageSize: 72, // Thumbnail size
+        imageSize: 400, // Thumbnail size
         defaultThumb: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72"%3E%3Crect width="72" height="72" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-family="sans-serif" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E',
         maxLabels: 20, // Maximum labels to display
         excerptLength: 100
@@ -163,26 +163,26 @@
      */
     function getEmojiForLabel(label) {
         const emojiMap = {
-            'food': '🍔',
-            'travel': '✈️',
-            'technology': '💻',
-            'tech': '💻',
-            'lifestyle': '🌟',
-            'fashion': '👗',
-            'sports': '⚽',
-            'music': '🎵',
-            'health': '💪',
-            'business': '💼',
-            'education': '📚',
-            'news': '📰',
-            'entertainment': '🎬',
-            'gaming': '🎮',
-            'photography': '📷',
-            'art': '🎨',
-            'science': '🔬',
-            'politics': '🏛️',
-            'nature': '🌿',
-            'animals': '🐾'
+            'Food': '🍔',
+            'Pelancongan': '✈️',
+            'Teknologi': '💻',
+            'Tech': '💻',
+            'Gaya Hidup': '🌟',
+            'Fesyen': '👗',
+            'Sukan': '⚽',
+            'Muzik': '🎵',
+            'Kesihatan': '💪',
+            'Bisnes': '💼',
+            'Pelajaran': '📚',
+            'Berita': '📰',
+            'Hiburan': '🎬',
+            'Gaming': '🎮',
+            'Fototgrafi': '📷',
+            'Seni': '🎨',
+            'Sains': '🔬',
+            'Politik': '🏛️',
+            'Alam Semulajadi': '🌿',
+            'Haiwan': '🐾'
         };
         
         const lowerLabel = label.toLowerCase();
