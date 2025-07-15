@@ -1,298 +1,470 @@
 /**
- * Created by The Bukit Besi
+ * Blogger Categorized Sitemap with Thumbnails
  */
 
 (function() {
     'use strict';
     
     // Configuration
-    const config = {
-        numPosts: 18,
+    const CONFIG = {
         blogUrl: 'https://bukitbesi.blogspot.com',
-        noImageUrl: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjhu_1tNK6stn8njZTiqOyJoK83q2bAIu9wlUGQ9k4KeIvMm26jqiTi5GHPY-uynpKkTQ6bLhWDZSXv1Nof4VRA7qasG1O29zFNjLhQ4oQgpZO2Kml7klSCpRp4MDuermU4Twrz9Lco05Bv/s1600/no-image.png',
-        excerptLength: 0, // Set to 0 to disable excerpts
-        imageSize: 's72-c', // Optimize image size
-        startIndex: 1
+        postsPerLabel: 6, // Posts to show per category
+        imageSize: 72, // Thumbnail size
+        defaultThumb: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72"%3E%3Crect width="72" height="72" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-family="sans-serif" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E',
+        maxLabels: 20, // Maximum labels to display
+        excerptLength: 100
     };
     
-    // State management
-    const state = {
-        currentScript: null,
-        urlPrevious: '',
-        urlNext: '',
-        posts: []
+    // Cache for loaded data
+    const cache = {
+        labels: [],
+        posts: {},
+        currentLabel: null
     };
     
     /**
-     * Strip HTML tags and truncate text
-     */
-    function stripHtml(html, maxLength) {
-        if (!maxLength || maxLength === 0) return '';
-        
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        const text = tmp.textContent || tmp.innerText || '';
-        return text.substring(0, maxLength - 1);
-    }
-    
-    /**
-     * Get optimized thumbnail URL
-     */
-    function getThumbnail(entry) {
-        if ('media$thumbnail' in entry) {
-            // Replace with optimized size
-            return entry.media$thumbnail.url.replace(/\/s\d+(-c)?\//, `/${config.imageSize}/`);
-        }
-        return config.noImageUrl;
-    }
-    
-    /**
-     * Generate Schema.org JSON-LD
-     */
-    function generateSchema(posts) {
-        const schema = {
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            "name": "Blog Sitemap",
-            "description": "Complete list of blog posts with thumbnails",
-            "url": window.location.href,
-            "numberOfItems": posts.length,
-            "itemListElement": posts.map((post, index) => ({
-                "@type": "ListItem",
-                "position": index + 1,
-                "item": {
-                    "@type": "BlogPosting",
-                    "name": post.title,
-                    "url": post.url,
-                    "image": post.thumbnail,
-                    "description": post.excerpt || post.title
-                }
-            }))
-        };
-        
-        // Remove existing schema if any
-        const existingSchema = document.getElementById('sitemap-schema');
-        if (existingSchema) {
-            existingSchema.remove();
-        }
-        
-        // Add new schema
-        const script = document.createElement('script');
-        script.type = 'application/ld+json';
-        script.id = 'sitemap-schema';
-        script.textContent = JSON.stringify(schema);
-        document.head.appendChild(script);
-    }
-    
-    /**
-     * Render posts with lazy loading for images
-     */
-    function renderPosts(data) {
-        const container = document.getElementById('recentpostsae');
-        const navContainer = document.getElementById('recentpostnavfeed');
-        
-        if (!container || !navContainer) return;
-        
-        // Extract navigation URLs
-        state.urlPrevious = '';
-        state.urlNext = '';
-        
-        if (data.feed.link) {
-            data.feed.link.forEach(link => {
-                if (link.rel === 'previous') state.urlPrevious = link.href;
-                if (link.rel === 'next') state.urlNext = link.href;
-            });
-        }
-        
-        // Process posts
-        state.posts = [];
-        const fragment = document.createDocumentFragment();
-        
-        data.feed.entry.slice(0, config.numPosts).forEach(entry => {
-            const title = entry.title.$t;
-            let url = '';
-            
-            // Find alternate link
-            if (entry.link) {
-                const altLink = entry.link.find(link => link.rel === 'alternate');
-                if (altLink) url = altLink.href;
-            }
-            
-            const content = entry.content?.$t || entry.summary?.$t || '';
-            const thumbnail = getThumbnail(entry);
-            const excerpt = stripHtml(content, config.excerptLength);
-            
-            // Store for schema
-            state.posts.push({ title, url, thumbnail, excerpt });
-            
-            // Create post element
-            const postEl = document.createElement('div');
-            postEl.className = 'recentpostel';
-            
-            // Use template literals for better readability
-            postEl.innerHTML = `
-                <a href="${url}" rel="bookmark">
-                    <img src="${thumbnail}" 
-                         alt="${title}" 
-                         loading="lazy" 
-                         width="72" 
-                         height="72">
-                </a>
-                <h6><a href="${url}" rel="bookmark">${title}</a></h6>
-                ${excerpt ? `<p>${excerpt}</p>` : ''}
-            `;
-            
-            fragment.appendChild(postEl);
-        });
-        
-        // Clear and append
-        container.innerHTML = '';
-        container.appendChild(fragment);
-        
-        // Render navigation
-        renderNavigation();
-        
-        // Generate schema
-        generateSchema(state.posts);
-    }
-    
-    /**
-     * Render navigation with improved accessibility
-     */
-    function renderNavigation() {
-        const navContainer = document.getElementById('recentpostnavfeed');
-        if (!navContainer) return;
-        
-        const nav = document.createElement('nav');
-        nav.setAttribute('aria-label', 'Sitemap pagination');
-        
-        let navHtml = '';
-        
-        // Previous button
-        if (state.urlPrevious) {
-            navHtml += `<a href="javascript:void(0);" 
-                           class="previous" 
-                           onclick="BloggerSitemap.navigate(-1)"
-                           aria-label="Previous page">
-                           <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        </a>`;
-        } else {
-            navHtml += `<span class="noactived previous" aria-disabled="true">
-                           <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        </span>`;
-        }
-        
-        // Next button
-        if (state.urlNext) {
-            navHtml += `<a href="javascript:void(0);" 
-                           class="next" 
-                           onclick="BloggerSitemap.navigate(1)"
-                           aria-label="Next page">
-                           <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                        </a>`;
-        } else {
-            navHtml += `<span class="noactived next" aria-disabled="true">
-                           <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                        </span>`;
-        }
-        
-        // Home button
-        navHtml += `<a href="javascript:void(0);" 
-                       class="home" 
-                       onclick="BloggerSitemap.navigate(0)"
-                       aria-label="First page">
-                       <i class="fas fa-home" aria-hidden="true"></i>
-                    </a>`;
-        
-        nav.innerHTML = navHtml;
-        navContainer.innerHTML = '';
-        navContainer.appendChild(nav);
-    }
-    
-    /**
-     * Load feed data with error handling
-     */
-    function loadFeed(params) {
-        // Show loading state
-        const container = document.getElementById('recentpostsae');
-        const navContainer = document.getElementById('recentpostnavfeed');
-        
-        if (container) {
-            container.innerHTML = '<div id="recentpostload" aria-live="polite" aria-label="Loading posts"></div>';
-        }
-        if (navContainer) {
-            navContainer.innerHTML = '';
-        }
-        
-        // Remove previous script if exists
-        if (state.currentScript) {
-            state.currentScript.remove();
-            state.currentScript = null;
-        }
-        
-        // Build URL
-        const url = `${config.blogUrl}/feeds/posts/default${params}&callback=BloggerSitemap.handleData`;
-        
-        // Create and load script
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = url;
-        script.id = 'sitemap-feed-script';
-        script.onerror = function() {
-            if (container) {
-                container.innerHTML = '<div class="error">Failed to load posts. Please try again.</div>';
-            }
-        };
-        
-        state.currentScript = script;
-        document.head.appendChild(script);
-    }
-    
-    /**
-     * Navigation handler
-     */
-    function navigate(direction) {
-        let params = '';
-        
-        if (direction === -1 && state.urlPrevious) {
-            const index = state.urlPrevious.indexOf('?');
-            params = state.urlPrevious.substring(index);
-        } else if (direction === 1 && state.urlNext) {
-            const index = state.urlNext.indexOf('?');
-            params = state.urlNext.substring(index);
-        } else {
-            params = `?start-index=${config.startIndex}&max-results=${config.numPosts}&orderby=published&alt=json-in-script`;
-        }
-        
-        loadFeed(params);
-    }
-    
-    /**
-     * Initialize sitemap
+     * Initialize the sitemap
      */
     function init() {
-        // Check if containers exist
         const container = document.getElementById('recentpostsae');
         const navContainer = document.getElementById('recentpostnavfeed');
         
         if (!container || !navContainer) {
-            console.error('Sitemap containers not found');
+            console.error('Required containers not found');
             return;
         }
         
-        // Start loading
-        navigate(0);
+        // Load all labels first
+        loadLabels();
+    }
+    
+    /**
+     * Load all labels/categories
+     */
+    function loadLabels() {
+        showLoading();
+        
+        const script = document.createElement('script');
+        script.src = `${CONFIG.blogUrl}/feeds/posts/summary?alt=json-in-script&max-results=0&callback=BloggerSitemap.processLabels`;
+        document.head.appendChild(script);
+    }
+    
+    /**
+     * Process labels from feed
+     */
+    function processLabels(data) {
+        const labelSet = new Set();
+        
+        // Extract all unique labels
+        if (data.feed.category) {
+            data.feed.category.forEach(cat => {
+                labelSet.add(cat.term);
+            });
+        }
+        
+        cache.labels = Array.from(labelSet).sort().slice(0, CONFIG.maxLabels);
+        
+        // Display label navigation
+        displayLabelNav();
+        
+        // Load first label's posts
+        if (cache.labels.length > 0) {
+            loadLabelPosts(cache.labels[0]);
+        } else {
+            // No labels found, load recent posts
+            loadRecentPosts();
+        }
+    }
+    
+    /**
+     * Display label navigation
+     */
+    function displayLabelNav() {
+        const navContainer = document.getElementById('recentpostnavfeed');
+        navContainer.innerHTML = '';
+        
+        const nav = document.createElement('div');
+        nav.className = 'label-nav';
+        nav.innerHTML = `
+            <style>
+                .label-nav {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                    margin-bottom: 20px;
+                    justify-content: center;
+                }
+                .label-btn {
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    font-size: 14px;
+                    text-decoration: none;
+                    color: #333;
+                    display: inline-block;
+                }
+                .label-btn:hover {
+                    background: #f0f0f0;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                }
+                .label-btn.active {
+                    background: #333;
+                    color: #fff;
+                    border-color: #333;
+                }
+                .all-posts-btn {
+                    background: #007bff;
+                    color: #fff;
+                    border-color: #007bff;
+                }
+                .all-posts-btn:hover {
+                    background: #0056b3;
+                }
+            </style>
+        `;
+        
+        // Add "All Posts" button
+        const allBtn = document.createElement('a');
+        allBtn.href = '#';
+        allBtn.className = 'label-btn all-posts-btn';
+        allBtn.textContent = '📋 All Posts';
+        allBtn.onclick = (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.label-btn').forEach(b => b.classList.remove('active'));
+            allBtn.classList.add('active');
+            loadRecentPosts();
+        };
+        nav.appendChild(allBtn);
+        
+        // Add label buttons
+        cache.labels.forEach(label => {
+            const btn = document.createElement('a');
+            btn.href = '#';
+            btn.className = 'label-btn';
+            btn.textContent = getEmojiForLabel(label) + ' ' + label;
+            btn.onclick = (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.label-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadLabelPosts(label);
+            };
+            nav.appendChild(btn);
+        });
+        
+        navContainer.appendChild(nav);
+    }
+    
+    /**
+     * Get emoji for common labels
+     */
+    function getEmojiForLabel(label) {
+        const emojiMap = {
+            'food': '🍔',
+            'travel': '✈️',
+            'technology': '💻',
+            'tech': '💻',
+            'lifestyle': '🌟',
+            'fashion': '👗',
+            'sports': '⚽',
+            'music': '🎵',
+            'health': '💪',
+            'business': '💼',
+            'education': '📚',
+            'news': '📰',
+            'entertainment': '🎬',
+            'gaming': '🎮',
+            'photography': '📷',
+            'art': '🎨',
+            'science': '🔬',
+            'politics': '🏛️',
+            'nature': '🌿',
+            'animals': '🐾'
+        };
+        
+        const lowerLabel = label.toLowerCase();
+        for (const [key, emoji] of Object.entries(emojiMap)) {
+            if (lowerLabel.includes(key)) return emoji;
+        }
+        return '📌'; // Default emoji
+    }
+    
+    /**
+     * Load posts for specific label
+     */
+    function loadLabelPosts(label) {
+        showLoading();
+        cache.currentLabel = label;
+        
+        // Check cache first
+        if (cache.posts[label]) {
+            displayPosts(cache.posts[label], label);
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = `${CONFIG.blogUrl}/feeds/posts/default/-/${encodeURIComponent(label)}?alt=json-in-script&max-results=${CONFIG.postsPerLabel}&callback=BloggerSitemap.processPosts`;
+        document.head.appendChild(script);
+    }
+    
+    /**
+     * Load recent posts (all categories)
+     */
+    function loadRecentPosts() {
+        showLoading();
+        cache.currentLabel = 'recent';
+        
+        if (cache.posts['recent']) {
+            displayPosts(cache.posts['recent'], 'Recent Posts');
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = `${CONFIG.blogUrl}/feeds/posts/default?alt=json-in-script&max-results=18&callback=BloggerSitemap.processPosts`;
+        document.head.appendChild(script);
+    }
+    
+    /**
+     * Process posts from feed
+     */
+    function processPosts(data) {
+        const posts = [];
+        
+        if (data.feed.entry) {
+            data.feed.entry.forEach(entry => {
+                const post = {
+                    title: entry.title.$t,
+                    url: entry.link.find(l => l.rel === 'alternate')?.href || '',
+                    thumbnail: extractThumbnail(entry),
+                    excerpt: extractExcerpt(entry),
+                    published: new Date(entry.published.$t),
+                    labels: entry.category ? entry.category.map(c => c.term) : []
+                };
+                posts.push(post);
+            });
+        }
+        
+        // Cache the results
+        const cacheKey = cache.currentLabel === 'recent' ? 'recent' : cache.currentLabel;
+        cache.posts[cacheKey] = posts;
+        
+        // Display posts
+        displayPosts(posts, cache.currentLabel === 'recent' ? 'Recent Posts' : cache.currentLabel);
+    }
+    
+    /**
+     * Extract thumbnail with multiple fallbacks
+     */
+    function extractThumbnail(entry) {
+        // Try media thumbnail first
+        if (entry.media$thumbnail) {
+            return entry.media$thumbnail.url.replace(/\/s\d+(-c)?\//, `/s${CONFIG.imageSize}-c/`);
+        }
+        
+        // Try to extract from content
+        const content = entry.content?.$t || entry.summary?.$t || '';
+        const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/);
+        if (imgMatch) {
+            return imgMatch[1].replace(/\/s\d+(-c)?\//, `/s${CONFIG.imageSize}-c/`);
+        }
+        
+        return CONFIG.defaultThumb;
+    }
+    
+    /**
+     * Extract clean excerpt
+     */
+    function extractExcerpt(entry) {
+        const content = entry.content?.$t || entry.summary?.$t || '';
+        const text = content.replace(/<[^>]+>/g, '').trim();
+        return text.length > CONFIG.excerptLength 
+            ? text.substring(0, CONFIG.excerptLength) + '...' 
+            : text;
+    }
+    
+    /**
+     * Display posts in grid
+     */
+    function displayPosts(posts, labelName) {
+        const container = document.getElementById('recentpostsae');
+        
+        // Add responsive grid styles
+        const styles = `
+            <style>
+                .sitemap-header {
+                    text-align: center;
+                    margin: 20px 0;
+                    font-size: 24px;
+                    color: #333;
+                }
+                .posts-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin: 20px 0;
+                }
+                .recentpostel {
+                    background: #fff;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    transition: transform 0.3s, box-shadow 0.3s;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .recentpostel:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+                }
+                .post-thumb {
+                    width: 100%;
+                    height: 200px;
+                    object-fit: cover;
+                    background: #f0f0f0;
+                }
+                .post-content {
+                    padding: 15px;
+                    flex-grow: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .post-title {
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin: 0 0 10px 0;
+                    line-height: 1.3;
+                }
+                .post-title a {
+                    color: #333;
+                    text-decoration: none;
+                    transition: color 0.3s;
+                }
+                .post-title a:hover {
+                    color: #007bff;
+                }
+                .post-excerpt {
+                    color: #666;
+                    font-size: 14px;
+                    line-height: 1.5;
+                    flex-grow: 1;
+                }
+                .post-meta {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 10px;
+                    padding-top: 10px;
+                    border-top: 1px solid #eee;
+                    font-size: 12px;
+                    color: #999;
+                }
+                @media (max-width: 768px) {
+                    .posts-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+        `;
+        
+        let html = styles;
+        html += `<h2 class="sitemap-header">${getEmojiForLabel(labelName)} ${labelName}</h2>`;
+        html += '<div class="posts-grid">';
+        
+        posts.forEach(post => {
+            const date = post.published.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            html += `
+                <article class="recentpostel">
+                    <img class="post-thumb" 
+                         src="${post.thumbnail}" 
+                         alt="${post.title}"
+                         loading="lazy"
+                         onerror="this.src='${CONFIG.defaultThumb}'">
+                    <div class="post-content">
+                        <h3 class="post-title">
+                            <a href="${post.url}" rel="bookmark">${post.title}</a>
+                        </h3>
+                        ${post.excerpt ? `<p class="post-excerpt">${post.excerpt}</p>` : ''}
+                        <div class="post-meta">
+                            <span class="post-date">${date}</span>
+                            <a href="${post.url}" class="read-more">Read More →</a>
+                        </div>
+                    </div>
+                </article>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+        // Generate Schema
+        generateSchema(posts, labelName);
+    }
+    
+    /**
+     * Show loading state
+     */
+    function showLoading() {
+        const container = document.getElementById('recentpostsae');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px;">
+                <div style="display: inline-block; width: 50px; height: 50px; border: 3px solid #f3f3f3; border-top: 3px solid #333; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            </div>
+        `;
+    }
+    
+    /**
+     * Generate SEO Schema
+     */
+    function generateSchema(posts, categoryName) {
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": `${categoryName} - Blog Sitemap`,
+            "description": `Collection of blog posts about ${categoryName}`,
+            "url": window.location.href,
+            "hasPart": posts.map((post, index) => ({
+                "@type": "BlogPosting",
+                "position": index + 1,
+                "headline": post.title,
+                "url": post.url,
+                "image": post.thumbnail !== CONFIG.defaultThumb ? post.thumbnail : undefined,
+                "datePublished": post.published.toISOString(),
+                "description": post.excerpt
+            }))
+        };
+        
+        let scriptTag = document.getElementById('sitemap-schema');
+        if (!scriptTag) {
+            scriptTag = document.createElement('script');
+            scriptTag.type = 'application/ld+json';
+            scriptTag.id = 'sitemap-schema';
+            document.head.appendChild(scriptTag);
+        }
+        scriptTag.textContent = JSON.stringify(schema);
     }
     
     // Public API
     window.BloggerSitemap = {
         init: init,
-        navigate: navigate,
-        handleData: renderPosts,
-        config: config // Allow runtime configuration
+        processLabels: processLabels,
+        processPosts: processPosts
     };
     
-    // Auto-initialize when DOM is ready
+    // Auto-init on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
