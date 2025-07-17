@@ -52,7 +52,16 @@
                 const postList = document.createElement('ul');
                 postList.className = 'post-list';
                 
-                const schemaData = { "@context": "https://schema.org", "@graph": [] };
+                // Add this to the renderRecentPosts function
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": entries.map((entry, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "url": entry.link.find(l => l.rel === 'alternate')?.href
+  }))
+};
 
                 posts.forEach(post => {
                     const postElement = createPostElement(post);
